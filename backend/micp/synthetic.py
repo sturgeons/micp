@@ -79,16 +79,21 @@ def generate_dataset(count: int = SAMPLE_COUNT, seed: int = SEED) -> list[dict]:
 
     Y = mechanism_baseline_matrix(X)
 
-    # 二阶修正：机理模型未显式刻画的效应
+    # 二阶修正：机理模型未显式刻画、但真实试验中常见的效应
     temp = X[:, PARAM_KEYS.index("temperature")]
     od = X[:, PARAM_KEYS.index("odValue")]
     rho = X[:, PARAM_KEYS.index("dryDensity")]
-    interaction = 0.06 * ((temp - 30) / 10) * ((od - 1.4) / 0.8)        # 温度-菌浓交互
-    dense_penalty = 0.08 * np.clip((rho - 1.65) / 0.15, 0, 1)            # 高密实度下的渗透衰减加速
-    Y[:, METRIC_KEYS.index("ucs")] *= 1 + interaction
-    Y[:, METRIC_KEYS.index("caco3")] *= 1 + 0.5 * interaction
+    fiber = X[:, PARAM_KEYS.index("fiberContent")]
+    cycles = X[:, PARAM_KEYS.index("cycles")]
+    interaction = 0.12 * ((temp - 30) / 10) * ((od - 1.4) / 0.8)         # 温度-菌浓交互
+    cycle_gain = 0.10 * np.tanh((cycles - 5.0) / 2.0)                    # 多轮灌注的胶结累积效应强于机理假设
+    fiber_density = 0.18 * fiber * np.clip((1.75 - rho) / 0.3, 0, 1)     # 松砂中纤维约束效应更显著
+    dense_penalty = 0.15 * np.clip((rho - 1.65) / 0.15, 0, 1)            # 高密实度下的渗透衰减加速
+    Y[:, METRIC_KEYS.index("ucs")] *= 1 + interaction + cycle_gain + fiber_density
+    Y[:, METRIC_KEYS.index("caco3")] *= 1 + 0.5 * interaction + 0.5 * cycle_gain
     Y[:, METRIC_KEYS.index("permeability")] *= 1 - dense_penalty
-    Y[:, METRIC_KEYS.index("cohesion")] *= 1 + 0.8 * interaction
+    Y[:, METRIC_KEYS.index("cohesion")] *= 1 + 0.8 * interaction + fiber_density
+    Y[:, METRIC_KEYS.index("disintegrationRate")] *= 1 - 0.8 * fiber_density
 
     # 测量噪声
     for j, key in enumerate(METRIC_KEYS):

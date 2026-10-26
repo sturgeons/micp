@@ -30,21 +30,26 @@ MATERIAL_FILES = [
     DOCS / "截图说明.md",
 ]
 
+# 仅收录原创业务代码：算法包、接口层、数据层与前端逻辑；不含 README / 依赖清单 / 样式表
 CODE_FILES = [
-    ROOT / "README.md",
-    ROOT / "requirements.txt",
-    ROOT / "index.html",
-    ROOT / "app.js",
-    ROOT / "styles.css",
-    ROOT / "backend" / "__init__.py",
-    ROOT / "backend" / "server.py",
+    ROOT / "backend" / "micp" / "__init__.py",
+    ROOT / "backend" / "micp" / "schemas.py",
+    ROOT / "backend" / "micp" / "mechanism.py",
+    ROOT / "backend" / "micp" / "models.py",
+    ROOT / "backend" / "micp" / "evaluation.py",
+    ROOT / "backend" / "micp" / "sensitivity.py",
+    ROOT / "backend" / "micp" / "optimizer.py",
+    ROOT / "backend" / "micp" / "statistics.py",
+    ROOT / "backend" / "micp" / "validators.py",
+    ROOT / "backend" / "micp" / "synthetic.py",
+    ROOT / "backend" / "micp" / "report.py",
     ROOT / "backend" / "db.py",
+    ROOT / "backend" / "server.py",
     ROOT / "backend" / "ml.py",
     ROOT / "backend" / "wsgi.py",
     ROOT / "backend" / "bootstrap_admin.py",
-    ROOT / "backend" / "templates" / "index.html",
     ROOT / "backend" / "static" / "app.js",
-    ROOT / "backend" / "static" / "styles.css",
+    ROOT / "backend" / "templates" / "index.html",
 ]
 
 

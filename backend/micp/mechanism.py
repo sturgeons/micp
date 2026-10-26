@@ -143,7 +143,7 @@ def mechanism_features_matrix(samples, const: MechanismConstants = CONST) -> tup
     inhibition = np.exp(-(np.maximum(conc - const.inhibition_onset, 0.0) / const.inhibition_sigma) ** 2)
 
     # 6. 逐轮钙源供给与累计 CaCO₃ 质量
-    #    每一轮的转化效率 = 基础效率 × (1 - 上一轮孔隙填充率)² × 轮次衰减
+    #    每一轮的转化效率 = 基础效率 × (1 - 上一轮孔隙填充率)^m × 轮次衰减
     #    即沉淀越多、孔隙越堵，后续灌注液越难进入并反应
     calcium_per_cycle = conc * v_f / 1000.0
     per_cycle_efficiency = const.max_conversion * saturation * temperature_factor * utilization * inhibition

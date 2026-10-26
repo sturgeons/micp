@@ -116,8 +116,11 @@ def _bin_factor(values: list[float], max_levels: int = 5) -> list[str]:
 def one_way_anova(dataset: list[dict], factor: str = "fiberContent", response: str = "ucs") -> dict:
     groups: dict[str, list[float]] = {}
     factor_values = [float(row[factor]) for row in dataset]
-    for label, row in zip(_bin_factor(factor_values), dataset):
+    order: dict[str, float] = {}
+    for label, value, row in zip(_bin_factor(factor_values), factor_values, dataset):
         groups.setdefault(label, []).append(float(row[response]))
+        order[label] = min(order.get(label, value), value)
+    groups = dict(sorted(groups.items(), key=lambda item: order[item[0]]))  # 按因素水平升序排列
     arrays = [np.array(v) for v in groups.values() if len(v) > 0]
     flat = np.concatenate(arrays) if arrays else np.array([])
     k, n = len(arrays), len(flat)

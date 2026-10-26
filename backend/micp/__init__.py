@@ -85,7 +85,8 @@ def predict(sample: dict, model_name: str, dataset: list[dict], stored_models: d
         "modelLabel": payload.get("label", LEARNER_LABELS.get(model_name, model_name)),
         "fallback": bool(payload.get("fallback")),
         "requested": payload.get("requested", model_name),
-        "sampleCount": payload.get("sampleCount", 0),
+        "sampleCount": payload.get("sampleCount", 0),   # 模型训练时使用的样本数（纯机理模型为 0）
+        "datasetSize": len(dataset),                     # 当前项目的历史样本数
         "trainedAt": payload.get("trainedAt"),
         "metrics": decomposition["final"],
         "decomposition": decomposition,

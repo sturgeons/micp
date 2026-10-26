@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import json
+import os
 import secrets
 import sqlite3
 import sys
@@ -36,7 +37,7 @@ except ImportError:  # 以脚本方式直接运行 server.py 时
     from micp.synthetic import DEFAULT_SCHEMES, generate_dataset
 
 DATA_DIR = ROOT / "data"
-DB_PATH = DATA_DIR / "micp.db"
+DB_PATH = Path(os.environ.get("MICP_DB_PATH") or (DATA_DIR / "micp.db"))
 
 __all__ = [
     "DEFAULT_SCHEMES",

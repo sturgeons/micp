@@ -32,8 +32,17 @@ def fmt(value, digits: int = 2) -> str:
         return "-"
 
 
+def fmt_p(value) -> str:
+    """p 值格式：返回 "=0.0031" 或 "<0.0001"，调用处写作 p{fmt_p(v)}。"""
+    try:
+        p = float(value)
+    except (TypeError, ValueError):
+        return "-"
+    return "<0.0001" if p < 1e-4 else f"={p:.4f}"
+
+
 # ---------------------------------------------------------------------------- SVG 组件
-def svg_bar_chart(items: list[tuple[str, float]], title: str, width: int = 640, color: str = PALETTE[0], unit: str = "") -> str:
+def svg_bar_chart(items: list[tuple[str, float]], title: str, width: int = 640, color: str = PALETTE[0], unit: str = "", digits: int = 2) -> str:
     if not items:
         return ""
     row_h, left, top = 26, 150, 36
@@ -46,7 +55,7 @@ def svg_bar_chart(items: list[tuple[str, float]], title: str, width: int = 640, 
         bars.append(
             f'<text x="{left - 8}" y="{y + 17}" text-anchor="end" font-size="12" fill="#334155">{esc(label)}</text>'
             f'<rect x="{left}" y="{y + 4}" width="{w:.1f}" height="{row_h - 8}" rx="3" fill="{color}" opacity="0.85"/>'
-            f'<text x="{left + w + 6:.1f}" y="{y + 17}" font-size="11" fill="#0f172a">{fmt(value, 3)}{esc(unit)}</text>'
+            f'<text x="{left + w + 6:.1f}" y="{y + 17}" font-size="11" fill="#0f172a">{fmt(value, digits)}{esc(unit)}</text>'
         )
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" viewBox="0 0 {width} {height}" style="font-family:sans-serif">'
@@ -239,7 +248,7 @@ def build_report_html(
             block += table(["样本", "指标", "数值", "方法", "原因"], [[d["sampleId"], d["metric"], fmt(d["value"]), d["method"], d["reason"]] for d in analysis["removedDetails"]], "异常值剔除明细")
         anova = analysis.get("anova") or {}
         if anova.get("groups"):
-            block += f"<h3>单因素方差分析</h3><p>{esc(anova.get('conclusion', ''))} F={fmt(anova.get('fValue'), 3)}，df=({anova.get('dfBetween')}, {anova.get('dfWithin')})，p={fmt(anova.get('pValue'), 4)}，η²={fmt(anova.get('eta2'), 3)}。</p>"
+            block += f"<h3>单因素方差分析</h3><p>{esc(anova.get('conclusion', ''))} F={fmt(anova.get('fValue'), 3)}，df=({anova.get('dfBetween')}, {anova.get('dfWithin')})，p{fmt_p(anova.get('pValue'))}，η²={fmt(anova.get('eta2'), 3)}。</p>"
             block += table(["水平", "n", "均值", "标准差"], [[g["level"], g["count"], fmt(g["mean"]), fmt(g["std"])] for g in anova["groups"]])
         reg = analysis.get("regression")
         if reg and reg.get("linear") and dataset:

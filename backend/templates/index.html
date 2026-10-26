@@ -17,14 +17,14 @@
     <div class="ambient ambient-b"></div>
     <header class="hero">
       <div class="hero-copy">
-        <p class="eyebrow">Geotechnical Intelligence Workspace</p>
+        <p class="eyebrow">MICP · Coir Fiber · Mechanism-Informed Prediction</p>
         <h1>MICP-椰壳纤维协同固化砂土性能分析与预测系统</h1>
         <p class="hero-text">
-          围绕试验参数管理、固化性能预测、统计分析、结果可视化与报告自动生成，构建一套面向科研与工程归档的离线工作台。
+          以微生物诱导碳酸钙沉淀机理模型为先验，结合历史试验样本进行残差学习，完成固化性能预测、参数敏感性分析、多目标配比优化、统计检验与标准化报告生成。
         </p>
         <div class="hero-actions">
-          <button id="seed-demo" class="button button-primary">载入示例数据</button>
-          <button id="train-models" class="button button-secondary">训练模型</button>
+          <button id="seed-demo" class="button button-primary">载入示范数据</button>
+          <button id="train-models" class="button button-secondary">训练并交叉验证</button>
           <button id="export-report" class="button button-secondary">生成分析报告</button>
         </div>
         <p id="backend-status" class="message">正在检测后端服务状态...</p>
@@ -39,8 +39,8 @@
           <strong id="dataset-count">0</strong>
         </div>
         <div class="metric-card">
-          <span>预测指标</span>
-          <strong>7</strong>
+          <span>推荐模型 CV R²</span>
+          <strong id="best-r2">-</strong>
         </div>
       </div>
     </header>
@@ -65,20 +65,20 @@
         </div>
       </section>
 
-      <section class="panel">
+      <!-- 00 账户与项目 -->
+      <section class="panel" id="panel-account">
         <div class="section-heading">
           <div>
             <p class="section-index">00</p>
             <h2>账户与项目</h2>
           </div>
-          <p>支持注册、登录、项目创建与切换，便于多人协作和云端部署后的数据隔离。</p>
+          <p>注册 / 登录后可创建独立项目空间，方案、样本与模型按项目隔离存储。</p>
         </div>
-
         <div class="grid two-column">
           <div class="card">
             <div class="card-head">
               <h3>用户登录</h3>
-              <span class="pill">Flask Auth</span>
+              <span class="pill">Bearer Token</span>
             </div>
             <div class="form-grid">
               <label>
@@ -87,7 +87,7 @@
               </label>
               <label>
                 <span>密码</span>
-                <input id="auth-password" type="password" placeholder="输入密码" />
+                <input id="auth-password" type="password" placeholder="至少 6 位" />
               </label>
             </div>
             <div class="actions">
@@ -97,7 +97,6 @@
             </div>
             <div id="auth-status" class="message"></div>
           </div>
-
           <div class="card">
             <div class="card-head">
               <h3>项目空间</h3>
@@ -126,57 +125,26 @@
         </div>
       </section>
 
-      <section class="panel">
+      <!-- 01 试验参数管理 -->
+      <section class="panel" id="panel-params">
         <div class="section-heading">
           <div>
             <p class="section-index">01</p>
             <h2>试验参数管理</h2>
           </div>
-          <p>支持单组录入、模板复用、批量导入导出与参数范围校验。</p>
+          <p>单组录入、模板复用、CSV 批量导入（支持中英文表头）、逐行校验与导出。</p>
         </div>
-
         <div class="grid two-column">
           <form id="parameter-form" class="card form-card">
             <div class="card-head">
               <h3>单组方案录入</h3>
               <span class="pill">范围自动校验</span>
             </div>
+            <div class="form-grid" id="param-inputs"></div>
             <div class="form-grid">
-              <label>
-                <span>砂土干密度 (g/cm³)</span>
-                <input name="dryDensity" type="number" step="0.01" value="1.60" required />
-              </label>
-              <label>
-                <span>椰壳纤维掺量 (%)</span>
-                <input name="fiberContent" type="number" step="0.01" value="0.30" required />
-              </label>
-              <label>
-                <span>菌液用量 (mL)</span>
-                <input name="bacterialVolume" type="number" step="1" value="120" required />
-              </label>
-              <label>
-                <span>菌落 OD 值</span>
-                <input name="odValue" type="number" step="0.01" value="1.20" required />
-              </label>
-              <label>
-                <span>固化温度 (℃)</span>
-                <input name="temperature" type="number" step="1" value="30" required />
-              </label>
-              <label>
-                <span>固化剂用量 (g/L)</span>
-                <input name="cementationDose" type="number" step="0.1" value="0.80" required />
-              </label>
-              <label>
-                <span>固定液用量 (mL)</span>
-                <input name="fixationVolume" type="number" step="1" value="90" required />
-              </label>
-              <label>
-                <span>固化次数</span>
-                <input name="cycles" type="number" step="1" value="4" required />
-              </label>
               <label class="wide">
                 <span>方案名称</span>
-                <input name="schemeName" type="text" value="标准方案 A" required />
+                <input name="schemeName" type="text" value="新方案" required />
               </label>
             </div>
             <div class="actions">
@@ -186,7 +154,6 @@
             </div>
             <p id="validation-message" class="message"></p>
           </form>
-
           <div class="card">
             <div class="card-head">
               <h3>批量导入与模板</h3>
@@ -196,7 +163,7 @@
               <label class="upload-box">
                 <input id="batch-import" type="file" accept=".csv" />
                 <strong>导入批量参数 CSV</strong>
-                <span>字段与表单同名，首行为表头。</span>
+                <span>首行为表头，支持 dryDensity / 干密度 等中英文列名，导入前自动校验。</span>
               </label>
               <label>
                 <span>已存模板</span>
@@ -211,32 +178,34 @@
                 <thead>
                   <tr>
                     <th>方案</th>
+                    <th>干密度</th>
                     <th>纤维 (%)</th>
-                    <th>温度 (℃)</th>
-                    <th>固化次数</th>
+                    <th>浓度 (mol/L)</th>
+                    <th>次数</th>
                   </tr>
                 </thead>
                 <tbody id="scheme-table"></tbody>
               </table>
             </div>
+            <div id="validation-report" class="validation-report"></div>
           </div>
         </div>
       </section>
 
-      <section class="panel">
+      <!-- 02 固化性能预测 -->
+      <section class="panel" id="panel-predict">
         <div class="section-heading">
           <div>
             <p class="section-index">02</p>
             <h2>固化性能预测</h2>
           </div>
-          <p>结合领域规则与历史样本校准，输出七类性能指标、敏感性排序和最优组合推荐。</p>
+          <p>机理基线 + 残差学习的混合模型，预测结果可拆分为"机理解释部分"与"数据修正部分"。</p>
         </div>
-
         <div class="grid two-column">
           <div class="card">
             <div class="card-head">
               <h3>预测控制台</h3>
-              <span class="pill">RF/BP 风格双模型</span>
+              <span class="pill">机理 + 残差学习</span>
             </div>
             <div class="stack">
               <label>
@@ -244,29 +213,46 @@
                 <select id="prediction-scheme"></select>
               </label>
               <label>
-                <span>模型策略</span>
+                <span>模型</span>
                 <select id="prediction-model">
-                  <option value="ensemble">随机森林风格集成模型</option>
-                  <option value="bp">BP 神经网络风格模型</option>
+                  <option value="ensemble">随机森林残差模型</option>
+                  <option value="gbrt">梯度提升残差模型</option>
+                  <option value="bp">BP 神经网络残差模型</option>
+                  <option value="mechanism">纯机理模型</option>
                 </select>
               </label>
               <div class="actions">
                 <button id="run-prediction" class="button button-primary">执行预测</button>
-                <button id="compare-schemes" class="button button-secondary">筛选最优方案</button>
+                <button id="compare-schemes" class="button button-secondary">方案综合评分</button>
               </div>
             </div>
             <div id="recommendation" class="highlight"></div>
+            <div class="sensitivity-box">
+              <h4>机理解释链条</h4>
+              <ol id="mechanism-notes" class="ranking"></ol>
+            </div>
           </div>
-
           <div class="card">
             <div class="card-head">
               <h3>预测结果</h3>
-              <span class="pill">7 个指标</span>
+              <span class="pill" id="prediction-model-pill">7 个指标</span>
             </div>
             <div id="prediction-grid" class="result-grid"></div>
-            <div id="training-metrics" class="stats-grid"></div>
+            <div class="table-wrap compact">
+              <table>
+                <thead>
+                  <tr>
+                    <th>指标</th>
+                    <th>机理基线</th>
+                    <th>数据修正</th>
+                    <th>最终预测</th>
+                  </tr>
+                </thead>
+                <tbody id="decomposition-table"></tbody>
+              </table>
+            </div>
             <div class="sensitivity-box">
-              <h4>参数敏感性分析</h4>
+              <h4>参数敏感性（OAT 弹性系数）</h4>
               <ul id="sensitivity-list" class="ranking"></ul>
             </div>
             <div class="sensitivity-box">
@@ -277,71 +263,318 @@
         </div>
       </section>
 
-      <section class="panel">
+      <!-- 03 模型评估 -->
+      <section class="panel" id="panel-evaluation">
         <div class="section-heading">
           <div>
             <p class="section-index">03</p>
+            <h2>模型训练与评估</h2>
+          </div>
+          <p>自适应 K 折交叉验证，逐指标输出 R² / RMSE / MAE / MAPE，并记录每次训练的版本与指标。</p>
+        </div>
+        <div class="grid two-column">
+          <div class="card">
+            <div class="card-head">
+              <h3>交叉验证结果</h3>
+              <span class="pill" id="evaluation-pill">待评估</span>
+            </div>
+            <div class="actions">
+              <button id="evaluate-models" class="button button-secondary">仅评估（不落库）</button>
+              <button id="train-models-2" class="button button-primary">训练并保存模型</button>
+            </div>
+            <div class="table-wrap compact">
+              <table>
+                <thead>
+                  <tr>
+                    <th>学习器</th>
+                    <th>折数</th>
+                    <th>验证 R²</th>
+                    <th>验证 RMSE</th>
+                    <th>MAPE</th>
+                    <th>训练 R²</th>
+                    <th>机理 R²</th>
+                  </tr>
+                </thead>
+                <tbody id="evaluation-table"></tbody>
+              </table>
+            </div>
+            <div id="evaluation-note" class="message"></div>
+            <div class="table-wrap compact">
+              <table>
+                <thead>
+                  <tr>
+                    <th>指标</th>
+                    <th>R²</th>
+                    <th>RMSE</th>
+                    <th>MAE</th>
+                    <th>MAPE</th>
+                  </tr>
+                </thead>
+                <tbody id="metric-evaluation-table"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head">
+              <h3>模型版本历史</h3>
+              <span class="pill">model_history</span>
+            </div>
+            <div id="training-metrics" class="stats-grid"></div>
+            <div class="table-wrap compact">
+              <table>
+                <thead>
+                  <tr>
+                    <th>模型</th>
+                    <th>版本</th>
+                    <th>样本数</th>
+                    <th>CV R²</th>
+                    <th>训练时间</th>
+                  </tr>
+                </thead>
+                <tbody id="model-history-table"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 04 敏感性深入分析 -->
+      <section class="panel" id="panel-sensitivity">
+        <div class="section-heading">
+          <div>
+            <p class="section-index">04</p>
+            <h2>敏感性深入分析</h2>
+          </div>
+          <p>偏依赖曲线展示单参数全区间响应；Morris 基本效应法在整个可行域内筛选主控因素与交互效应。</p>
+        </div>
+        <div class="grid two-column">
+          <div class="card">
+            <div class="card-head">
+              <h3>偏依赖曲线</h3>
+              <span class="pill">Partial Dependence</span>
+            </div>
+            <div class="form-grid">
+              <label>
+                <span>扫描参数</span>
+                <select id="pdp-param"></select>
+              </label>
+              <label>
+                <span>响应指标</span>
+                <select id="pdp-metric"></select>
+              </label>
+            </div>
+            <div class="actions">
+              <button id="run-pdp" class="button button-primary">绘制偏依赖曲线</button>
+            </div>
+            <canvas id="pdp-canvas" width="720" height="380"></canvas>
+          </div>
+          <div class="card">
+            <div class="card-head">
+              <h3>Morris 全局敏感性</h3>
+              <span class="pill">μ* / σ</span>
+            </div>
+            <div class="form-grid">
+              <label>
+                <span>轨迹数</span>
+                <input id="morris-trajectories" type="number" min="4" max="60" value="12" />
+              </label>
+              <label>
+                <span>查看指标</span>
+                <select id="morris-metric"></select>
+              </label>
+            </div>
+            <div class="actions">
+              <button id="run-morris" class="button button-primary">执行 Morris 分析</button>
+            </div>
+            <div id="morris-meta" class="message"></div>
+            <div class="table-wrap compact">
+              <table>
+                <thead>
+                  <tr>
+                    <th>参数</th>
+                    <th>μ*</th>
+                    <th>μ</th>
+                    <th>σ</th>
+                    <th>σ/μ*</th>
+                  </tr>
+                </thead>
+                <tbody id="morris-table"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 05 配比优化 -->
+      <section class="panel" id="panel-optimizer">
+        <div class="section-heading">
+          <div>
+            <p class="section-index">05</p>
+            <h2>多目标配比优化</h2>
+          </div>
+          <p>拉丁超立方采样 + 局部细化，在历史样本覆盖的参数包络内搜索加权最优配比，并给出 UCS-成本 Pareto 前沿。</p>
+        </div>
+        <div class="grid two-column">
+          <div class="card">
+            <div class="card-head">
+              <h3>目标权重</h3>
+              <span class="pill">自动归一化</span>
+            </div>
+            <div id="weight-sliders" class="stack"></div>
+            <label class="checkbox-row">
+              <input id="restrict-to-data" type="checkbox" checked />
+              <span>限定在历史样本参数包络内（避免模型外推）</span>
+            </label>
+            <div class="actions">
+              <button id="run-optimizer" class="button button-primary">执行配比优化</button>
+            </div>
+            <div id="optimizer-meta" class="message"></div>
+          </div>
+          <div class="card">
+            <div class="card-head">
+              <h3>推荐配比与 Pareto 前沿</h3>
+              <span class="pill">Top-N</span>
+            </div>
+            <div class="table-wrap compact">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>干密度</th>
+                    <th>纤维%</th>
+                    <th>菌液mL</th>
+                    <th>OD</th>
+                    <th>温度</th>
+                    <th>浓度</th>
+                    <th>胶结液mL</th>
+                    <th>次数</th>
+                    <th>UCS</th>
+                    <th>成本</th>
+                    <th>得分</th>
+                  </tr>
+                </thead>
+                <tbody id="optimizer-table"></tbody>
+              </table>
+            </div>
+            <canvas id="pareto-canvas" width="720" height="360"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- 06 试验数据处理 -->
+      <section class="panel" id="panel-dataset">
+        <div class="section-heading">
+          <div>
+            <p class="section-index">06</p>
             <h2>试验数据处理</h2>
           </div>
-          <p>完成历史数据导入、描述统计、异常值检测以及单因素方差分析。</p>
+          <p>历史样本导入、IQR + Grubbs 异常值检测、描述统计、单因素方差分析（含 p 值）与 UCS-CaCO₃ 回归拟合。</p>
         </div>
-
         <div class="grid two-column">
           <div class="card">
             <div class="card-head">
               <h3>历史样本数据</h3>
-              <span class="pill">自动解析</span>
+              <span class="pill">自动校验</span>
             </div>
             <div class="stack">
               <label class="upload-box">
                 <input id="dataset-import" type="file" accept=".csv" />
                 <strong>导入历史试验数据</strong>
-                <span>建议包含参数列与预测指标列，用于校准和统计分析。</span>
+                <span>需包含 8 项参数列与 7 项指标列；不合格行将被列出并跳过。</span>
               </label>
               <div id="dataset-meta" class="message"></div>
               <div class="actions">
                 <button id="export-dataset" class="button button-secondary">导出历史样本</button>
-                <button id="seed-dataset" class="button button-ghost">恢复示例样本</button>
+                <button id="seed-dataset" class="button button-ghost">恢复示范样本</button>
               </div>
             </div>
-            <div class="table-wrap">
+            <div class="table-wrap compact">
               <table>
                 <thead>
                   <tr>
                     <th>样本</th>
+                    <th>纤维%</th>
+                    <th>次数</th>
                     <th>UCS</th>
-                    <th>干密度</th>
-                    <th>碳酸钙</th>
+                    <th>崩解率</th>
+                    <th>CaCO₃</th>
                   </tr>
                 </thead>
                 <tbody id="dataset-table"></tbody>
               </table>
             </div>
           </div>
-
           <div class="card">
             <div class="card-head">
               <h3>统计分析结果</h3>
-              <span class="pill">均值 / Std / CV / ANOVA</span>
+              <span class="pill">描述统计 / ANOVA / 回归</span>
             </div>
-            <div id="stats-summary" class="stats-grid"></div>
+            <div class="form-grid">
+              <label>
+                <span>方差分析因素</span>
+                <select id="anova-factor"></select>
+              </label>
+              <label>
+                <span>响应指标</span>
+                <select id="anova-response"></select>
+              </label>
+            </div>
             <div class="actions">
               <button id="run-analysis" class="button button-primary">执行统计分析</button>
             </div>
+            <div id="stats-summary" class="stats-grid"></div>
             <div id="analysis-detail" class="analysis-detail"></div>
           </div>
         </div>
       </section>
 
-      <section class="panel">
+      <!-- 07 相关矩阵 -->
+      <section class="panel" id="panel-correlation">
         <div class="section-heading">
           <div>
-            <p class="section-index">04</p>
+            <p class="section-index">07</p>
+            <h2>相关性分析</h2>
+          </div>
+          <p>8 项参数与 7 项指标的 Pearson 相关矩阵及显著性，识别主控参数与指标间的耦合关系。</p>
+        </div>
+        <div class="grid two-column">
+          <div class="card chart-card">
+            <canvas id="correlation-canvas" width="720" height="560"></canvas>
+          </div>
+          <div class="card">
+            <div class="card-head">
+              <h3>显著相关对</h3>
+              <span class="pill">|r| 排序</span>
+            </div>
+            <div class="actions">
+              <button id="run-correlation" class="button button-primary">计算相关矩阵</button>
+            </div>
+            <div class="table-wrap compact">
+              <table>
+                <thead>
+                  <tr>
+                    <th>参数</th>
+                    <th>指标</th>
+                    <th>r</th>
+                    <th>p</th>
+                  </tr>
+                </thead>
+                <tbody id="correlation-table"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 08 可视化 -->
+      <section class="panel" id="panel-charts">
+        <div class="section-heading">
+          <div>
+            <p class="section-index">08</p>
             <h2>可视化与图表</h2>
           </div>
-          <p>生成参数-性能关系曲线、柱状图、箱线图和交互热力图。</p>
+          <p>参数-性能散点趋势、分组柱状图、箱线图与交互热力图。</p>
         </div>
-
         <div class="grid two-column">
           <div class="card">
             <div class="card-head">
@@ -360,8 +593,8 @@
               <label>
                 <span>图表类型</span>
                 <select id="chart-type">
-                  <option value="line">参数-性能曲线</option>
-                  <option value="bar">对比柱状图</option>
+                  <option value="line">参数-性能趋势</option>
+                  <option value="bar">分组柱状图</option>
                   <option value="box">箱线图</option>
                   <option value="heatmap">热力图</option>
                 </select>
@@ -371,40 +604,36 @@
               <button id="render-chart" class="button button-primary">更新图表</button>
             </div>
           </div>
-
           <div class="card chart-card">
             <canvas id="chart-canvas" width="720" height="420"></canvas>
           </div>
         </div>
       </section>
 
-      <section class="panel">
+      <!-- 09 报告 -->
+      <section class="panel" id="panel-report">
         <div class="section-heading">
           <div>
-            <p class="section-index">05</p>
+            <p class="section-index">09</p>
             <h2>标准化报告</h2>
           </div>
-          <p>自动汇总参数配置、预测结果、统计分析与可视化图表，导出可归档文档。</p>
+          <p>汇总方案、机理解释、预测、敏感性、模型评估、统计检验与优化建议，内嵌 SVG 图表，可导出 Word 或打印 PDF。</p>
         </div>
-
         <div class="card">
           <div class="card-head">
             <h3>报告预览</h3>
             <span class="pill">Word / PDF 友好</span>
           </div>
+          <div class="actions">
+            <button id="preview-report" class="button button-secondary">刷新预览</button>
+            <button id="export-report-2" class="button button-primary">导出报告</button>
+          </div>
           <div id="report-meta" class="message"></div>
+          <iframe id="report-frame" class="report-frame" title="报告预览"></iframe>
           <article id="report-preview" class="report-preview"></article>
         </div>
       </section>
     </main>
-
-    <template id="report-template">
-      <section class="report">
-        <h1>MICP-椰壳纤维协同固化砂土性能分析报告</h1>
-        <p class="report-time"></p>
-        <div class="report-body"></div>
-      </section>
-    </template>
 
     <script src="{{ url_for('static', filename='app.js') }}"></script>
   </body>
