@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MICP-椰壳纤维协同固化砂土性能分析与预测系统 V1.0</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Manrope:wght@400;500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="ambient ambient-a"></div>
+    <div class="ambient ambient-b"></div>
+    <header class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Geotechnical Intelligence Workspace</p>
+        <h1>MICP-椰壳纤维协同固化砂土性能分析与预测系统</h1>
+        <p class="hero-text">
+          围绕试验参数管理、固化性能预测、统计分析、结果可视化与报告自动生成，构建一套面向科研与工程归档的离线工作台。
+        </p>
+        <div class="hero-actions">
+          <button id="seed-demo" class="button button-primary">载入示例数据</button>
+          <button id="train-models" class="button button-secondary">训练模型</button>
+          <button id="export-report" class="button button-secondary">生成分析报告</button>
+        </div>
+        <p id="backend-status" class="message">正在检测后端服务状态...</p>
+      </div>
+      <div class="hero-panel">
+        <div class="metric-card">
+          <span>方案数量</span>
+          <strong id="scheme-count">0</strong>
+        </div>
+        <div class="metric-card">
+          <span>历史样本</span>
+          <strong id="dataset-count">0</strong>
+        </div>
+        <div class="metric-card">
+          <span>预测指标</span>
+          <strong>7</strong>
+        </div>
+      </div>
+    </header>
+
+    <main class="dashboard">
+      <section class="panel">
+        <div class="section-heading">
+          <div>
+            <p class="section-index">00</p>
+            <h2>账户与项目</h2>
+          </div>
+          <p>支持注册、登录、项目创建与切换，便于多人协作和云端部署后的数据隔离。</p>
+        </div>
+
+        <div class="grid two-column">
+          <div class="card">
+            <div class="card-head">
+              <h3>用户登录</h3>
+              <span class="pill">Flask Auth</span>
+            </div>
+            <div class="form-grid">
+              <label>
+                <span>用户名</span>
+                <input id="auth-username" type="text" placeholder="输入用户名" />
+              </label>
+              <label>
+                <span>密码</span>
+                <input id="auth-password" type="password" placeholder="输入密码" />
+              </label>
+            </div>
+            <div class="actions">
+              <button id="register-user" class="button button-secondary">注册</button>
+              <button id="login-user" class="button button-primary">登录</button>
+              <button id="logout-user" class="button button-ghost">退出</button>
+            </div>
+            <div id="auth-status" class="message"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <h3>项目空间</h3>
+              <span class="pill">Multi Project</span>
+            </div>
+            <div class="form-grid">
+              <label>
+                <span>项目名称</span>
+                <input id="project-name" type="text" placeholder="例如：论文试验组 A" />
+              </label>
+              <label>
+                <span>项目说明</span>
+                <input id="project-description" type="text" placeholder="项目描述" />
+              </label>
+              <label class="wide">
+                <span>当前项目</span>
+                <select id="project-select"></select>
+              </label>
+            </div>
+            <div class="actions">
+              <button id="create-project" class="button button-primary">创建项目</button>
+              <button id="refresh-projects" class="button button-secondary">刷新项目</button>
+            </div>
+            <div id="project-status" class="message"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-heading">
+          <div>
+            <p class="section-index">01</p>
+            <h2>试验参数管理</h2>
+          </div>
+          <p>支持单组录入、模板复用、批量导入导出与参数范围校验。</p>
+        </div>
+
+        <div class="grid two-column">
+          <form id="parameter-form" class="card form-card">
+            <div class="card-head">
+              <h3>单组方案录入</h3>
+              <span class="pill">范围自动校验</span>
+            </div>
+            <div class="form-grid">
+              <label>
+                <span>砂土干密度 (g/cm³)</span>
+                <input name="dryDensity" type="number" step="0.01" value="1.60" required />
+              </label>
+              <label>
+                <span>椰壳纤维掺量 (%)</span>
+                <input name="fiberContent" type="number" step="0.01" value="0.30" required />
+              </label>
+              <label>
+                <span>菌液用量 (mL)</span>
+                <input name="bacterialVolume" type="number" step="1" value="120" required />
+              </label>
+              <label>
+                <span>菌落 OD 值</span>
+                <input name="odValue" type="number" step="0.01" value="1.20" required />
+              </label>
+              <label>
+                <span>固化温度 (℃)</span>
+                <input name="temperature" type="number" step="1" value="30" required />
+              </label>
+              <label>
+                <span>固化剂用量 (g/L)</span>
+                <input name="cementationDose" type="number" step="0.1" value="0.80" required />
+              </label>
+              <label>
+                <span>固定液用量 (mL)</span>
+                <input name="fixationVolume" type="number" step="1" value="90" required />
+              </label>
+              <label>
+                <span>固化次数</span>
+                <input name="cycles" type="number" step="1" value="4" required />
+              </label>
+              <label class="wide">
+                <span>方案名称</span>
+                <input name="schemeName" type="text" value="标准方案 A" required />
+              </label>
+            </div>
+            <div class="actions">
+              <button type="submit" class="button button-primary">保存方案</button>
+              <button type="button" id="save-template" class="button button-secondary">保存模板</button>
+              <button type="button" id="export-params" class="button button-ghost">导出参数表</button>
+            </div>
+            <p id="validation-message" class="message"></p>
+          </form>
+
+          <div class="card">
+            <div class="card-head">
+              <h3>批量导入与模板</h3>
+              <span class="pill">CSV / 本地存储</span>
+            </div>
+            <div class="stack">
+              <label class="upload-box">
+                <input id="batch-import" type="file" accept=".csv" />
+                <strong>导入批量参数 CSV</strong>
+                <span>字段与表单同名，首行为表头。</span>
+              </label>
+              <label>
+                <span>已存模板</span>
+                <select id="template-select">
+                  <option value="">选择模板后回填</option>
+                </select>
+              </label>
+              <button id="apply-template" class="button button-secondary">应用模板</button>
+            </div>
+            <div class="table-wrap compact">
+              <table>
+                <thead>
+                  <tr>
+                    <th>方案</th>
+                    <th>纤维 (%)</th>
+                    <th>温度 (℃)</th>
+                    <th>固化次数</th>
+                  </tr>
+                </thead>
+                <tbody id="scheme-table"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-heading">
+          <div>
+            <p class="section-index">02</p>
+            <h2>固化性能预测</h2>
+          </div>
+          <p>结合领域规则与历史样本校准，输出七类性能指标、敏感性排序和最优组合推荐。</p>
+        </div>
+
+        <div class="grid two-column">
+          <div class="card">
+            <div class="card-head">
+              <h3>预测控制台</h3>
+              <span class="pill">RF/BP 风格双模型</span>
+            </div>
+            <div class="stack">
+              <label>
+                <span>选择方案</span>
+                <select id="prediction-scheme"></select>
+              </label>
+              <label>
+                <span>模型策略</span>
+                <select id="prediction-model">
+                  <option value="ensemble">随机森林风格集成模型</option>
+                  <option value="bp">BP 神经网络风格模型</option>
+                </select>
+              </label>
+              <div class="actions">
+                <button id="run-prediction" class="button button-primary">执行预测</button>
+                <button id="compare-schemes" class="button button-secondary">筛选最优方案</button>
+              </div>
+            </div>
+            <div id="recommendation" class="highlight"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <h3>预测结果</h3>
+              <span class="pill">7 个指标</span>
+            </div>
+            <div id="prediction-grid" class="result-grid"></div>
+            <div class="sensitivity-box">
+              <h4>参数敏感性分析</h4>
+              <ul id="sensitivity-list" class="ranking"></ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-heading">
+          <div>
+            <p class="section-index">03</p>
+            <h2>试验数据处理</h2>
+          </div>
+          <p>完成历史数据导入、描述统计、异常值检测以及单因素方差分析。</p>
+        </div>
+
+        <div class="grid two-column">
+          <div class="card">
+            <div class="card-head">
+              <h3>历史样本数据</h3>
+              <span class="pill">自动解析</span>
+            </div>
+            <div class="stack">
+              <label class="upload-box">
+                <input id="dataset-import" type="file" accept=".csv" />
+                <strong>导入历史试验数据</strong>
+                <span>建议包含参数列与预测指标列，用于校准和统计分析。</span>
+              </label>
+              <div id="dataset-meta" class="message"></div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>样本</th>
+                    <th>UCS</th>
+                    <th>干密度</th>
+                    <th>碳酸钙</th>
+                  </tr>
+                </thead>
+                <tbody id="dataset-table"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <h3>统计分析结果</h3>
+              <span class="pill">均值 / Std / CV / ANOVA</span>
+            </div>
+            <div id="stats-summary" class="stats-grid"></div>
+            <div class="actions">
+              <button id="run-analysis" class="button button-primary">执行统计分析</button>
+            </div>
+            <div id="analysis-detail" class="analysis-detail"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-heading">
+          <div>
+            <p class="section-index">04</p>
+            <h2>可视化与图表</h2>
+          </div>
+          <p>生成参数-性能关系曲线、柱状图、箱线图和交互热力图。</p>
+        </div>
+
+        <div class="grid two-column">
+          <div class="card">
+            <div class="card-head">
+              <h3>图表参数</h3>
+              <span class="pill">Canvas 绘制</span>
+            </div>
+            <div class="form-grid">
+              <label>
+                <span>X 轴参数</span>
+                <select id="chart-x"></select>
+              </label>
+              <label>
+                <span>Y 轴指标</span>
+                <select id="chart-y"></select>
+              </label>
+              <label>
+                <span>图表类型</span>
+                <select id="chart-type">
+                  <option value="line">参数-性能曲线</option>
+                  <option value="bar">对比柱状图</option>
+                  <option value="box">箱线图</option>
+                  <option value="heatmap">热力图</option>
+                </select>
+              </label>
+            </div>
+            <div class="actions">
+              <button id="render-chart" class="button button-primary">更新图表</button>
+            </div>
+          </div>
+
+          <div class="card chart-card">
+            <canvas id="chart-canvas" width="720" height="420"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-heading">
+          <div>
+            <p class="section-index">05</p>
+            <h2>标准化报告</h2>
+          </div>
+          <p>自动汇总参数配置、预测结果、统计分析与可视化图表，导出可归档文档。</p>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h3>报告预览</h3>
+            <span class="pill">Word / PDF 友好</span>
+          </div>
+          <article id="report-preview" class="report-preview"></article>
+        </div>
+      </section>
+    </main>
+
+    <template id="report-template">
+      <section class="report">
+        <h1>MICP-椰壳纤维协同固化砂土性能分析报告</h1>
+        <p class="report-time"></p>
+        <div class="report-body"></div>
+      </section>
+    </template>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
